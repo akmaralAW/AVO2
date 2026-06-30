@@ -220,6 +220,8 @@ AVO_EXPORT float absSq(const Vector2 &vector);
  */
 AVO_EXPORT float det(const Vector2 &vector1, const Vector2 &vector2);
 
+AVO_EXPORT float leftOfObs(const Vector2 &a, const Vector2 &b, const Vector2 &c);
+
 /**
  * @relates   Vector2
  * @brief     Computes the normalization of a specified vector.
@@ -227,7 +229,6 @@ AVO_EXPORT float det(const Vector2 &vector1, const Vector2 &vector2);
  * @return    The normalization of the vector.
  */
 AVO_EXPORT Vector2 normalize(const Vector2 &vector);
-
 /**
  * @relates   Vector2
  * @brief     Computes the scalar multiplication of the specified vector with
@@ -252,6 +253,9 @@ AVO_EXPORT Vector2 operator*(float scalar, const Vector2 &vector);
  */
 AVO_EXPORT std::ostream &operator<<(std::ostream &stream,
                                     const Vector2 &vector);
+                                    
+AVO_EXPORT double norm(const Vector2 &vector);
+
 }  // namespace AVO
 
 #endif  // AVO_VECTOR2_H_

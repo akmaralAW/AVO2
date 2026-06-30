@@ -32,10 +32,10 @@
  */
 
 #include "Simulator.h"
-
 #include <cassert>
 #include <limits>
 #include <utility>
+#include <iostream>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -45,6 +45,7 @@
 #include "KdTree.h"
 #include "Line.h"
 #include "Vector2.h"
+#include "Obstacle.h"
 
 namespace AVO {
 Simulator::Simulator()
@@ -78,6 +79,7 @@ std::size_t Simulator::addAgent(const Vector2 &position) {
   agent->position_ = position;
   agent->radius_ = defaultAgent_->radius_;
   agent->timeHorizon_ = defaultAgent_->timeHorizon_;
+  agent->timeHorizonObst_ = defaultAgent_->timeHorizonObst_;
   agent->velocity_ = defaultAgent_->velocity_;
   agent->id_ = agents_.size();
 
@@ -87,7 +89,8 @@ std::size_t Simulator::addAgent(const Vector2 &position) {
 }
 
 std::size_t Simulator::addAgent(const Vector2 &position, float neighborDist,
-                                std::size_t maxNeighbors, float timeHorizon,
+                                std::size_t maxNeighbors, 
+                                float timeHorizon, float timeHorizonObst,
                                 float radius, float maxSpeed, float maxAccel,
                                 float accelInterval) {
   Agent *agent = new Agent();
@@ -106,6 +109,7 @@ std::size_t Simulator::addAgent(const Vector2 &position, float neighborDist,
   agent->radius_ = radius;
   assert(timeHorizon >= 0.0F);
   agent->timeHorizon_ = timeHorizon;
+  agent->timeHorizonObst_ = timeHorizonObst;
   agent->id_ = agents_.size();
 
   agents_.push_back(agent);
@@ -114,7 +118,8 @@ std::size_t Simulator::addAgent(const Vector2 &position, float neighborDist,
 }
 
 std::size_t Simulator::addAgent(const Vector2 &position, float neighborDist,
-                                std::size_t maxNeighbors, float timeHorizon,
+                                std::size_t maxNeighbors, 
+                                float timeHorizon, float timeHorizonObst,
                                 float radius, float maxSpeed, float maxAccel,
                                 float accelInterval, const Vector2 &velocity) {
   Agent *agent = new Agent();
@@ -133,12 +138,53 @@ std::size_t Simulator::addAgent(const Vector2 &position, float neighborDist,
   agent->radius_ = radius;
   assert(timeHorizon >= 0.0F);
   agent->timeHorizon_ = timeHorizon;
+  agent->timeHorizonObst_ = timeHorizonObst;
   agent->velocity_ = velocity;
   agent->id_ = agents_.size();
 
   agents_.push_back(agent);
 
   return agents_.size() - 1U;
+}
+
+// support for obstacles
+void Simulator::processObstacles()
+{
+  kdTree_->buildObstacleTree();
+}
+
+size_t Simulator::addObstacle(const std::vector<Vector2> &vertices)
+{
+
+  const size_t obstacleNo = obstacles_.size();
+  for (size_t i = 0; i < vertices.size(); ++i) {
+    Obstacle *obstacle = new Obstacle();
+    obstacle->point_ = vertices[i];
+
+    if (i != 0) {
+      obstacle->prevObstacle_ = obstacles_.back();
+      obstacle->prevObstacle_->nextObstacle_ = obstacle;
+    }
+
+    if (i == vertices.size() - 1) {
+      obstacle->nextObstacle_ = obstacles_[obstacleNo];
+      obstacle->nextObstacle_->prevObstacle_ = obstacle;
+    }
+
+    obstacle->unitDir_ = normalize(vertices[(i == vertices.size() - 1 ? 0 : i + 1)] - vertices[i]);
+
+    if (vertices.size() == 2) {
+      obstacle->isConvex_ = true;
+    }
+    else {
+      obstacle->isConvex_ = (leftOfObs(vertices[(i == 0 ? vertices.size() - 1 : i - 1)], vertices[i], vertices[(i == vertices.size() - 1 ? 0 : i + 1)]) >= 0.0f);
+    }
+
+    obstacle->id_ = obstacles_.size();
+
+    obstacles_.push_back(obstacle);
+  }
+  return obstacleNo;
 }
 
 void Simulator::doStep() {
@@ -158,7 +204,6 @@ void Simulator::doStep() {
   for (int agentNo = 0; agentNo < static_cast<int>(agents_.size()); ++agentNo) {
     agents_[agentNo]->update(timeStep_);
   }
-
   globalTime_ += timeStep_;
 }
 
@@ -197,6 +242,17 @@ float Simulator::getAgentNeighborDist(std::size_t agentNo) const {
 std::size_t Simulator::getAgentNumNeighbors(std::size_t agentNo) const {
   assert(agentNo < agents_.size());
   return agents_[agentNo]->agentNeighbors_.size();
+}
+
+// support for obstacles
+size_t Simulator::getAgentNumObstacleNeighbors(size_t agentNo) const
+{
+  return agents_[agentNo]->obstacleNeighbors_.size();
+}
+
+size_t Simulator::getAgentObstacleNeighbor(size_t agentNo, size_t neighborNo) const
+{
+  return agents_[agentNo]->obstacleNeighbors_[neighborNo].second->id_;
 }
 
 std::size_t Simulator::getAgentNumOrcaLines(std::size_t agentNo) const {
@@ -243,13 +299,13 @@ void Simulator::setAgentAccelInterval(std::size_t agentNo,
 }
 
 void Simulator::setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
-                                 float timeHorizon, float radius,
+                                 float timeHorizon, float timeHorizonObst,
+                                 float radius,
                                  float maxSpeed, float maxAccel,
                                  float accelInterval) {
   if (defaultAgent_ == NULL) {
     defaultAgent_ = new Agent();
   }
-
   assert(accelInterval >= 0.0F);
   defaultAgent_->accelInterval_ = accelInterval;
   assert(maxAccel >= 0.0F);
@@ -263,10 +319,14 @@ void Simulator::setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
   defaultAgent_->radius_ = radius;
   assert(timeHorizon >= 0.0F);
   defaultAgent_->timeHorizon_ = timeHorizon;
+  assert(timeHorizonObst_ >= 0.0F);
+  defaultAgent_->timeHorizonObst_ = timeHorizonObst;
+
 }
 
 void Simulator::setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
-                                 float timeHorizon, float radius,
+                                 float timeHorizon, float timeHorizonObst,
+                                 float radius,
                                  float maxSpeed, float maxAccel,
                                  float accelInterval, const Vector2 &velocity) {
   if (defaultAgent_ == NULL) {
@@ -286,6 +346,8 @@ void Simulator::setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
   defaultAgent_->radius_ = radius;
   assert(timeHorizon >= 0.0F);
   defaultAgent_->timeHorizon_ = timeHorizon;
+  assert(timeHorizonObst_ >= 0.0F);
+  defaultAgent_->timeHorizonObst_ = timeHorizonObst;
   defaultAgent_->velocity_ = velocity;
 }
 

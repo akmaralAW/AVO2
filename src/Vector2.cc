@@ -114,6 +114,10 @@ float det(const Vector2 &vector1, const Vector2 &vector2) {
 
 Vector2 normalize(const Vector2 &vector) { return vector / abs(vector); }
 
+double norm(const Vector2 &vector) {return std::sqrt(vector.x_ * vector.x_ + vector.y_ * vector.y_);}
+
+float leftOfObs(const Vector2 &a, const Vector2 &b, const Vector2 &c){return det(a - c, b - a);}
+
 Vector2 operator*(float scalar, const Vector2 &vector) {
   return Vector2(scalar * vector.getX(), scalar * vector.getY());
 }

@@ -46,6 +46,7 @@
 
 #include "Line.h"
 #include "Vector2.h"
+#include "Obstacle.h"
 
 namespace AVO {
 class KdTree;
@@ -90,6 +91,13 @@ class Agent {
    * @param[in] timeStep The time step of the simulation.
    */
   void update(float timeStep);
+  inline float compute_sqr(float a)
+	{
+		return a * a;
+	};
+  // support for obstacles
+	void insertObstacleNeighbor(const Obstacle *obstacle, float rangeSq);
+
 
   // Not implemented.
   Agent(const Agent &other);
@@ -109,12 +117,15 @@ class Agent {
   float neighborDist_;
   float radius_;
   float timeHorizon_;
+	float timeHorizonObst_;
   std::deque<Vector2> boundary_;
   std::vector<std::pair<float, const Agent *> > agentNeighbors_;
   std::vector<Line> orcaLines_;
+	std::vector<std::pair<float, const Obstacle *> > obstacleNeighbors_;
 
   friend class KdTree;
   friend class Simulator;
+
 };
 }  // namespace AVO
 

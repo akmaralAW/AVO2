@@ -60,7 +60,8 @@ target_sources(${AVO_LIBRARY}
       KdTree.h
       Line.cc
       Simulator.cc
-      Vector2.cc)
+      Vector2.cc
+      Obstacle.cpp)
 
 set_target_properties(${AVO_LIBRARY} PROPERTIES
   CXX_VISIBILITY_PRESET hidden
@@ -145,3 +146,9 @@ if(ENABLE_INSTALLATION)
     endif()
   endif()
 endif()
+
+add_executable(AVOPlanner
+    AVOPlanner.cpp
+)
+
+target_link_libraries(AVOPlanner PRIVATE ${AVO_LIBRARY} yaml-cpp)

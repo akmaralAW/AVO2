@@ -41,7 +41,6 @@
 
 #include <cstddef>
 #include <vector>
-
 #include "Export.h"
 
 namespace AVO {
@@ -49,7 +48,7 @@ class Agent;
 class KdTree;
 class Line;
 class Vector2;
-
+class Obstacle;
 /**
  * @brief The simulation.
  */
@@ -85,7 +84,8 @@ class AVO_EXPORT Simulator {
    * @return    The number of the agent.
    */
   std::size_t addAgent(const Vector2 &position, float neighborDist,
-                       std::size_t maxNeighbors, float timeHorizon,
+                       std::size_t maxNeighbors, 
+                       float timeHorizon, float timeHorizonObst,
                        float radius, float maxSpeed, float maxAccel,
                        float accelInterval);
 
@@ -103,7 +103,8 @@ class AVO_EXPORT Simulator {
    * @return    The number of the agent.
    */
   std::size_t addAgent(const Vector2 &position, float neighborDist,
-                       std::size_t maxNeighbors, float timeHorizon,
+                       std::size_t maxNeighbors, 
+                       float timeHorizon, float timeHorizonObst,
                        float radius, float maxSpeed, float maxAccel,
                        float accelInterval, const Vector2 &velocity);
 
@@ -276,7 +277,8 @@ class AVO_EXPORT Simulator {
    * @param[in] accelInterval The default acceleration interval of a new agent.
    */
   void setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
-                        float timeHorizon, float radius, float maxSpeed,
+                        float timeHorizon, float timeHorizonObst, 
+                        float radius, float maxSpeed,
                         float maxAccel, float accelInterval);
 
   /**
@@ -292,7 +294,8 @@ class AVO_EXPORT Simulator {
    * @param[in] velocity      The default initial velocity of a new agent.
    */
   void setAgentDefaults(float neighborDist, std::size_t maxNeighbors,
-                        float timeHorizon, float radius, float maxSpeed,
+                        float timeHorizon, float timeHorizonObst,
+                        float radius, float maxSpeed,
                         float maxAccel, float accelInterval,
                         const Vector2 &velocity);
 
@@ -382,6 +385,16 @@ class AVO_EXPORT Simulator {
    */
   void setTimeStep(float timeStep) { timeStep_ = timeStep; }
 
+  // support for obstacles
+	size_t addObstacle(const std::vector<Vector2> &vertices);
+
+  void processObstacles();
+  
+	size_t getAgentNumObstacleNeighbors(size_t agentNo) const;
+
+	size_t getAgentObstacleNeighbor(size_t agentNo, size_t neighborNo) const;
+
+
  private:
   // Not implemented.
   Simulator(const Simulator &other);
@@ -394,6 +407,7 @@ class AVO_EXPORT Simulator {
   float globalTime_;
   float timeStep_;
   std::vector<Agent *> agents_;
+  std::vector<Obstacle *> obstacles_;
 
   friend class KdTree;
 };

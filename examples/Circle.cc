@@ -47,6 +47,8 @@
 
 #include "AVO.h"
 
+#include "Trajectory.h"
+
 const float AVO_TWO_PI = 6.283185307179586F;
 
 bool haveReachedGoals(const AVO::Simulator &simulator,
@@ -64,11 +66,12 @@ int main() {
   AVO::Simulator simulator;
 
   simulator.setTimeStep(0.25F);
-  simulator.setAgentDefaults(15.0F, 10U, 10.0F, 1.5F, 4.0F, 2.0F, 2.0F);
+  // neighDist, maxNeighb, timeHorizon, radius, maxSpeed, maxAccel, accelInt.
+  simulator.setAgentDefaults(15.0F, 10U, 10.0F, 10.0F, 1.5F, 4.0F, 2.0F, 2.0F);
 
   std::vector<AVO::Vector2> goals;
 
-  for (std::size_t i = 0U; i < 250U; ++i) {
+  for (std::size_t i = 0U; i < 5U; ++i) {
     const AVO::Vector2 position =
         200.0F *
         AVO::Vector2(std::cos(0.004F * static_cast<float>(i) * AVO_TWO_PI),
@@ -77,30 +80,33 @@ int main() {
     simulator.addAgent(position);
     goals.push_back(-position);
   }
-
+  // for extracting the solution
+  std::vector<Trajectory> trajectories;
+	trajectories.resize(simulator.getNumAgents());
   do {
-#if AVO_OUTPUT_TIME_AND_POSITIONS
-    std::cout << simulator.getGlobalTime();
 
     for (std::size_t i = 0U; i < simulator.getNumAgents(); ++i) {
-      std::cout << " " << simulator.getAgentPosition(i);
-    }
+      // save
+      trajectories[i].positions.push_back(simulator.getAgentPosition(i));
+      trajectories[i].velocities.push_back(simulator.getAgentVelocity(i));
+      std::cout << "position: " << std::endl;
+      std::cout << trajectories[i].positions[i] << std::endl;
+      std::cout << "velocity: " << std::endl;
+      std::cout << trajectories[i].velocities[i] << std::endl;
 
-    std::cout << std::endl;
-#endif  // AVO_OUTPUT_TIME_AND_POSITIONS
-
-    for (std::size_t i = 0U; i < simulator.getNumAgents(); ++i) {
       AVO::Vector2 toGoal = goals[i] - simulator.getAgentPosition(i);
 
       if (AVO::absSq(toGoal) > 1.0F) {
         toGoal = normalize(toGoal);
       }
-
       simulator.setAgentPrefVelocity(i, toGoal);
     }
 
     simulator.doStep();
   } while (!haveReachedGoals(simulator, goals));
+  	saveTrajectoriesYAML(
+    trajectories,
+    "result.yaml");
 
   return 0;
 }
