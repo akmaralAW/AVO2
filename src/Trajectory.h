@@ -4,9 +4,11 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <filesystem>
 
 #include "Vector2.h"
 
+namespace fs = std::filesystem;
 struct Trajectory {
     std::vector<AVO::Vector2> positions;
     std::vector<AVO::Vector2> velocities;
@@ -117,6 +119,37 @@ bool sanityCheck(
     }
 
     return true;
+}
+// for stats
+double compute_cost(const std::vector<Trajectory>& trajectories)
+{
+    double cost = 0.0;
+
+    for (const auto& traj : trajectories) {
+        cost += static_cast<double>(traj.accelerations.size());
+    }
+
+    return cost * 0.1;
+}
+
+size_t compute_makespan(const std::vector<Trajectory>& trajectories)
+{
+    size_t makespan = 0;
+
+    for (const auto& traj : trajectories) {
+        makespan = std::max(makespan, traj.accelerations.size());
+    }
+
+    return makespan * 0.1;
+}
+
+void create_dir_if_necessary(const std::string& file_path)
+{
+
+  fs::path path(file_path);
+  if (path.has_parent_path()) {
+      fs::create_directories(path.parent_path());
+  }
 }
 
 #endif

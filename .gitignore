@@ -33,7 +33,7 @@
 #
 # <https://gamma.cs.unc.edu/AVO/>
 #
-
+build/
 /_build/
 /.idea/
 /.user.bazelrc

@@ -4,8 +4,8 @@
 #include <string>
 #include <iostream>
 #include <stdexcept>
-
 #include <yaml-cpp/yaml.h>
+#include <chrono>
 #include <AVO.h>
 #include <Trajectory.h>
 
@@ -48,13 +48,22 @@ void runAVO(const std::string& input_yaml,
             const std::string& output_yaml,
             const std::string& stats_yaml)
 {
+    auto start = std::chrono::steady_clock::now();
 	  AVO::Simulator *sim = new AVO::Simulator();
     setupScenario(sim);
     YAML::Node config = YAML::LoadFile(input_yaml);
     auto robots = config["robots"];
 
     if (!robots) {
-        throw std::runtime_error("Missing 'robots' field in YAML");
+      throw std::runtime_error("Missing 'robots' field in YAML");
+    }
+
+    create_dir_if_necessary(stats_yaml);
+    std::ofstream stats(stats_yaml, std::ios::app);
+    if (!stats)
+    {
+      std::cerr << "Failed to open stats.yaml file.\n";
+      return;
     }
 
     std::vector<Trajectory> trajectories;
@@ -124,10 +133,24 @@ void runAVO(const std::string& input_yaml,
       std::cout << "Dynamics are violated" << std::endl;
       return;
     }
+    auto end = std::chrono::steady_clock::now();
+    double elapsed_sec =
+      std::chrono::duration<double>(end - start).count();
+    std::cout << "Time: " << elapsed_sec << " sec\n";
+    // save the output
     saveTrajectoriesYAML(trajectories, output_yaml);
     std::cout << "AVO simulation finished with "
               << sim->getNumAgents()
               << " agents." << std::endl;
+    // save stats
+    double cost = compute_cost(trajectories);
+    double makespan = compute_makespan(trajectories);
+    // save stats
+    stats << "stats: " << "\n";
+    stats << "  - t: " << elapsed_sec << "\n";
+    stats << "    cost: " << cost << "\n";
+    stats << "    makespan: " << makespan << "\n";
+    stats.flush();
 }
 
 int main(int argc, char** argv)
