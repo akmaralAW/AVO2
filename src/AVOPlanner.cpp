@@ -21,16 +21,14 @@ void setupScenario(AVO::Simulator *sim)
 
 void setPreferredVelocities(AVO::Simulator* sim)
 {
-    for (size_t i = 0; i < sim->getNumAgents(); ++i) {
-        AVO::Vector2 goalVector = goals[i] - sim->getAgentPosition(i);
+  for (size_t i = 0; i < sim->getNumAgents(); ++i) {
+    AVO::Vector2 goalVector = goals[i] - sim->getAgentPosition(i);
 
-        if (AVO::absSq(goalVector) > 1.0F) {
-            goalVector = normalize(goalVector); // velocity (vx,vy) towards the goal
-        }
-        if(i==5)
-            std::cout << "your robot" << std::endl;
-        sim->setAgentPrefVelocity(i, goalVector);
+    if (AVO::absSq(goalVector) > 1.0F) {
+        goalVector = normalize(goalVector); // velocity (vx,vy) towards the goal
     }
+    sim->setAgentPrefVelocity(i, goalVector);
+  }
 }
 
 bool haveReachedGoals(AVO::Simulator* sim)

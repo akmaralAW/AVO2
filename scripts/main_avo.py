@@ -10,7 +10,7 @@ def run_avo(filename_env, folder, timelimit):
     filename_result = Path(folder) / "result_avo.yaml"
     filename_stats = Path(folder) / "stats.yaml"
 
-    cmd = ["./planners/AVO2/build/AVOPlanner", 
+    cmd = ["./planners/avo/build/src/AVOPlanner", 
         filename_env,
         filename_result,
         filename_stats,
