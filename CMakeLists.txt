@@ -34,7 +34,7 @@
 # <https://gamma.cs.unc.edu/AVO/>
 #
 
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 project(AVO
   VERSION 1.0.1
   DESCRIPTION

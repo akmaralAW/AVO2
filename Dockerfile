@@ -53,7 +53,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     ca-certificates \
     clang \
     clang-tidy \
-    cmake \
     cmake-format \
     cppcheck \
     cpplint \
