@@ -15,8 +15,8 @@ void setupScenario(AVO::Simulator *sim)
 {
 	/* Specify the global time step of the simulation. */
 	sim->setTimeStep(0.1f);
-    // neighDist, maxNeighb, timeHorizon, time horizon obs, radius, maxSpeed, maxAccel, accelInt.
-    sim->setAgentDefaults(20.0F, 20U, 10.0F,/*obstacle horizon*/10.0F, 0.3, 5.0F, 2.0F, 0.1F);
+    // neighDist, maxNeighb, timeHorizon, radius, maxSpeed, maxAccel, accelInt.
+    sim->setAgentDefaults(15.0F, 10U, 10.0F, 0.5, 5.0F, 2.0F, 1.0F);
 }
 
 void setPreferredVelocities(AVO::Simulator* sim)
@@ -92,31 +92,6 @@ void runAVO(const std::string& input_yaml,
         goals.push_back(goal_pos);
         trajectories.emplace_back();
     }
-    // add obstacles
-    std::vector<std::vector<AVO::Vector2>> obstacles;
-
-    for (const auto& obs : config["environment"]["obstacles"]) {
-        if (!obs["type"] || obs["type"].as<std::string>() != "box")
-            continue;
-
-        auto center = obs["center"].as<std::vector<double>>();
-        auto size   = obs["size"].as<std::vector<double>>();
-
-        float cx = static_cast<float>(center[0]);
-        float cy = static_cast<float>(center[1]);
-
-        float hx = static_cast<float>(size[0]) * 0.5f;
-        float hy = static_cast<float>(size[1]) * 0.5f;
-
-        std::vector<AVO::Vector2> box;
-
-        box.emplace_back(cx - hx, cy - hy);
-        box.emplace_back(cx + hx, cy - hy);
-        box.emplace_back(cx + hx, cy + hy);
-        box.emplace_back(cx - hx, cy + hy);
-        sim->addObstacle(box);
-    }
-    sim->processObstacles();
     // motion planning
     do {
         for (size_t i = 0; i < sim->getNumAgents(); ++i) {

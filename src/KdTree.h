@@ -45,7 +45,6 @@
 namespace AVO {
 class Agent;
 class Simulator;
-class Obstacle;
 
 /*
  * @brief k-D tree for agents in the simulation.
@@ -57,12 +56,6 @@ class KdTree {
    * @brief     Constructor.
    * @param[in] simulator The simulation.
    */
-  class ObstacleTreeNode {
-		public:
-			ObstacleTreeNode *left;
-			const Obstacle *obstacle;
-			ObstacleTreeNode *right;
-		};
 
   explicit KdTree(Simulator *simulator);
 
@@ -106,18 +99,6 @@ class KdTree {
                                float &rangeSq,  // NOLINT(runtime/references)
                                std::size_t node) const;
 
-  void buildObstacleTree();
-
-	ObstacleTreeNode *buildObstacleTreeRecursive(const std::vector<Obstacle *> &
-													 obstacles);
-
-	void computeObstacleNeighbors(Agent *agent, float rangeSq) const;
-
-  void queryObstacleTreeRecursive(Agent *agent, float rangeSq,
-										const ObstacleTreeNode *node) const;
-
-	void deleteObstacleTree(ObstacleTreeNode *node);
-  
   // Not implemented.
   KdTree(const KdTree &other);
 
@@ -127,7 +108,6 @@ class KdTree {
   Simulator *simulator_;
   std::vector<Agent *> agents_;
   std::vector<AgentTreeNode> agentTree_;
-	ObstacleTreeNode *obstacleTree_;
 	static const size_t MAX_LEAF_SIZE = 10;
   
   friend class Agent;

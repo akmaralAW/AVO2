@@ -67,7 +67,7 @@ int main() {
 
   simulator.setTimeStep(0.25F);
   // neighDist, maxNeighb, timeHorizon, radius, maxSpeed, maxAccel, accelInt.
-  simulator.setAgentDefaults(15.0F, 10U, 10.0F, 10.0F, 1.5F, 4.0F, 2.0F, 2.0F);
+  simulator.setAgentDefaults(15.0F, 10U, 10.0F, 1.5F, 4.0F, 2.0F, 2.0F);
 
   std::vector<AVO::Vector2> goals;
 

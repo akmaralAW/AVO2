@@ -40,6 +40,7 @@ class Animation:
     self.robot_numbers = len(env["robots"])
     self.size = np.array([0.5, 0.25])
     self.radius = 0.25
+    self.obs_radius = 0.25
     self.robot_types = []
     self.interval = 100 
 
@@ -47,6 +48,10 @@ class Animation:
       if obstacle["type"] == "box":
         draw_box_patch(
             self.ax, obstacle["center"], obstacle["size"], facecolor='gray', edgecolor='black')
+      elif obstacle["type"] == "circular":
+        draw_sphere_patch(
+          self.ax, obstacle["center"], self.obs_radius, facecolor='gray', edgecolor='black')
+
       else:
         print("ERROR: unknown obstacle type")
 

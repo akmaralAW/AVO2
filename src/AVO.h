@@ -79,7 +79,6 @@
 #include "Line.h"
 #include "Simulator.h"
 #include "Vector2.h"
-#include "Obstacle.h"
 // IWYU pragma: end_exports
 
 #endif  // AVO_AVO_H_
