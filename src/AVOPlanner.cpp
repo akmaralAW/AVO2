@@ -105,7 +105,7 @@ void runAVO(const std::string& input_yaml,
     // compute accelerations
     computeAccelerations(trajectories, /*dt*/sim->getTimeStep());
     if(!sanityCheck(trajectories, /*dt*/sim->getTimeStep())){
-      std::cout << "Dynamics are violated" << std::endl;
+      std::cout << "Failure! Violations!" << std::endl;
       return;
     }
     auto end = std::chrono::steady_clock::now();

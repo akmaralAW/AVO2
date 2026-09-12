@@ -76,12 +76,16 @@ void computeAccelerations(std::vector<Trajectory>& trajectories, double dt)
         }
     }
 }
-// sanity check for the dynamics
+// sanity check for the dynamics, inter-robot collisions
 bool sanityCheck(
     const std::vector<Trajectory>& trajectories,
     double dt,
     double eps = 1e-6)
-  {
+{
+    constexpr double robot_radius = 0.25;
+    constexpr double min_dist = 2.0 * robot_radius;
+
+    // Check trajectory dimensions and dynamics
     for (const auto& traj : trajectories) {
 
       size_t N = traj.positions.size();
@@ -94,28 +98,67 @@ bool sanityCheck(
 
       for (size_t i = 0; i + 1 < N; ++i) {
 
-          const auto& p = traj.positions[i];
-          const auto& p_next = traj.positions[i + 1];
+        const auto& p = traj.positions[i];
+        const auto& p_next = traj.positions[i + 1];
 
-          const auto& v = traj.velocities[i];
-          const auto& v_next = traj.velocities[i + 1];
-          const auto& a = traj.accelerations[i];
+        const auto& v = traj.velocities[i];
+        const auto& v_next = traj.velocities[i + 1];
+        const auto& a = traj.accelerations[i];
 
-          // predictions. As authors do - position uses updated velocity (semi-implicit Euler)
-          auto v_pred = v + a * dt;
-          auto p_pred = p + v_pred * dt;
-          
-          AVO::Vector2 vv = v_pred - v_next;
-          AVO::Vector2 pp = p_pred - p_next;
+        // Semi-implicit Euler prediction
+        auto v_pred = v + a * dt;
+        auto p_pred = p + v_pred * dt;
 
-          if (norm(vv) > eps ||
-              norm(pp) > eps)
+        AVO::Vector2 vv = v_pred - v_next;
+        AVO::Vector2 pp = p_pred - p_next;
+
+        if (norm(vv) > eps ||
+            norm(pp) > eps)
+        {
+            std::cout << "position error: " << norm(pp) << std::endl;
+            std::cout << "velocity error: " << norm(vv) << std::endl;
+            return false;
+        }
+      }
+    }
+
+    // Check inter-robot collisions
+    if (trajectories.empty())
+        return true;
+
+    const size_t N = trajectories[0].positions.size();
+
+    for (size_t t = 0; t < N; ++t) {
+
+      for (size_t i = 0; i < trajectories.size(); ++i) {
+        for (size_t j = i + 1; j < trajectories.size(); ++j) {
+
+          // Make sure both trajectories have this timestep
+          if (t >= trajectories[i].positions.size() ||
+              t >= trajectories[j].positions.size())
           {
-              std::cout << "position error: " << norm(pp) << std::endl;
-              std::cout << "velocity error: " << norm(vv) << std::endl;
               return false;
           }
+
+          const auto& pi = trajectories[i].positions[t];
+          const auto& pj = trajectories[j].positions[t];
+
+          double dist = norm(pi - pj);
+
+          if (dist < min_dist - eps)
+          {
+            std::cout
+                << "INTER-ROBOT COLLISION: "
+                << "robots " << i << " and " << j
+                << ", timestep " << t
+                << ", distance = " << dist
+                << ", required >= " << min_dist
+                << std::endl;
+
+            return false;
+          }
         }
+      }
     }
 
     return true;
